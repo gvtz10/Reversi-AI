@@ -13,3 +13,4 @@ Start the program by running GAME and select the size of the board either 4x4 (P
 **Command Lines:**
 
 javac *.java java Game
+
