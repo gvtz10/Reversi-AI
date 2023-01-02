@@ -20,5 +20,6 @@ When declaring a 4x4 board and intelligent AI, the AI will use a Minimax search 
 When declaring a 8x8 board and intelligent AI, the AI will use a Heuristic Minimax with Alpha Beta Pruning search algorithm to perform its actions. It will explore each state after the player moves (initial state) and find the most optimal move with a depth cutoff that you input. The most optimal (or efficient) depths are anything less than 10. The heuristic will return an evaluation of its state at the cutoff to perform moves.
 
 ## Command Lines
-javac *.java ---
+javac *.java 
+
 java Game
