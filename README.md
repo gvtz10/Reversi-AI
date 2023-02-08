@@ -1,7 +1,7 @@
 # MINIMAX Reversi AI Project
 
-## Author
-- Lorenzo Mendoza
+## Authors
+- Lorenzo Mendoza, Gus Vietze
 
 ## Running the program
 1. Compile the program by running `javac *.java` in the terminal.
