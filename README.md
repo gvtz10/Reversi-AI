@@ -1,4 +1,4 @@
-# MINIMAX Reversi AI Project
+# MINIMAX Reversi AI
 
 ## Authors
 - Lorenzo Mendoza, Gus Vietze
