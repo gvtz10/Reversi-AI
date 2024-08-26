@@ -1,7 +1,7 @@
 # MINIMAX Reversi AI
 
 ## Authors
-- Lorenzo Mendoza, Gus Vietze
+- Gus Vietze, Lorenzo Mendoza
 
 ## Running the program
 1. Compile the program by running `javac *.java` in the terminal.
