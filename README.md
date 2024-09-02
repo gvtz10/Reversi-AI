@@ -73,7 +73,14 @@ The MINIMAX algorithm is a fundamental approach in decision-making for two-playe
 
 4. **Optimal Move Selection**: At the leaf nodes (terminal states), the algorithm evaluates the final game states based on a utility function. These evaluations are then propagated up the tree to determine the best move for the current player.
 
-5. **Complexity**: The basic MINIMAX algorithm explores all possible moves and their outcomes, which can become impractical for games with large state spaces, like larger Reversi boards.
+5. **Complexity**: The non-heuristic based MINIMAX algorithm explores all possible moves and their outcomes, which can become impractical for games with large state spaces, like larger Reversi boards.
+
+### Iterative Deepening
+To manage the trade-off between search depth and time constraints, the AI uses iterative deepening:
+
+Time-Bound Search: The algorithm progressively deepens the search until a time limit is reached. This ensures the AI can make a move within a reasonable time frame.
+Best Move Identification: The best move found at each depth is recorded, and once the time limit is reached, the AI uses the best move identified so far.
+Flexibility: This method allows the AI to adjust its depth dynamically based on available time, making it adaptable to different board sizes and game states.
 
 ### Alpha-Beta Pruning
 
@@ -85,19 +92,65 @@ Alpha-beta pruning enhances the MINIMAX algorithm by eliminating the need to exp
 
 3. **Efficiency**: By cutting off branches that won’t influence the final outcome, alpha-beta pruning reduces the number of nodes evaluated, speeding up the decision-making process without affecting the outcome.
 
-### Heuristic Cutoff
+Certainly! Here's a more detailed explanation of the **Dynamic Heuristic Evaluation Function** used in the AI for this Reversi game:
 
-For larger board sizes, MINIMAX can become computationally prohibitive due to the vast number of possible game states. Heuristic cutoffs address this issue:
+### Dynamic Heuristic Evaluation Function
 
-1. **Depth Limitation**: Instead of evaluating the game tree to its fullest extent, a heuristic cutoff limits the depth of the search. The AI evaluates only up to a certain number of moves ahead and estimates the game state beyond that depth.
+The Dynamic Heuristic Evaluation Function is a critical component in the AI's decision-making process, especially when the search depth is limited due to the complexity of the game tree. This function is designed to estimate the potential value of a given board state by considering various strategic factors that influence the outcome of the game. The AI uses this heuristic to make informed decisions when it cannot exhaustively search the entire game tree, particularly in larger board sizes or under time constraints.
 
-2. **Heuristic Evaluation**: When the search reaches the cutoff depth, the AI uses a heuristic evaluation function to estimate the value of the game state. This heuristic function provides a quick approximation of the board's potential without a full simulation.
+#### Key Components of the Heuristic Function
 
-3. **Performance**: The heuristic evaluation helps in making the AI's decision-making process faster, especially for larger boards. For the 8x8 board, the AI uses MINIMAX with alpha-beta pruning and applies a heuristic to evaluate game states at the cutoff depth. A typical depth for this heuristic approach is less than 10 levels deep.
+1. **Piece Difference (`p`)**:
+   - **Definition**: This factor evaluates the difference in the number of discs between the AI and the opponent.
+   - **Calculation**: The formula is:
+     \[
+     p = \frac{100 \times (\text{myTiles} - \text{oppTiles})}{\text{myTiles} + \text{oppTiles}}
+     \]
+   - **Purpose**: The piece difference gives a basic indication of the player's dominance on the board. A higher piece difference in favor of the AI indicates a stronger position, while a lower difference suggests a weaker one.
 
-4. **Heuristic Function**: The heuristic function used in this project evaluates factors such as the number of discs, potential moves, and control of the board’s corners and edges. This function helps in making informed decisions when the full game tree cannot be explored.
+2. **Frontier Discs (`f`)**:
+   - **Definition**: Frontier discs are those that are adjacent to empty spaces, making them vulnerable to capture in the opponent's next move.
+   - **Calculation**: The frontier disc value is calculated similarly to the piece difference but focuses on the discs' vulnerability:
+     \[
+     f = -\frac{100 \times (\text{myFrontTiles} - \text{oppFrontTiles})}{\text{myFrontTiles} + \text{oppFrontTiles}}
+     \]
+   - **Purpose**: Minimizing frontier discs is essential as these discs are easier for the opponent to flip. The AI aims to reduce its own frontier discs while maximizing the opponent's, thus increasing its stability on the board.
 
-By combining MINIMAX with alpha-beta pruning and heuristic cutoffs, the AI in this Reversi game balances depth of search with computational efficiency, providing a challenging and responsive opponent.
+3. **Corner Occupancy (`c`)**:
+   - **Definition**: Occupying the corners of the board is a critical strategy in Reversi, as corner discs are stable and cannot be flipped once placed.
+   - **Calculation**: The value assigned to corner occupancy is:
+     \[
+     c = 25 \times (\text{myCornerTiles} - \text{oppCornerTiles})
+     \]
+   - **Purpose**: Controlling the corners provides a significant advantage, making it a high-priority goal. The AI heavily favors moves that either secure a corner or prevent the opponent from doing so.
+
+4. **Corner Closeness (`m`)**:
+   - **Definition**: This factor penalizes positions where the AI has discs near an unoccupied corner that the opponent might later capture.
+   - **Calculation**: It evaluates the presence of AI or opponent discs adjacent to unoccupied corners, reducing the AI’s score if its discs are close to such corners without securing them.
+   - **Purpose**: The goal is to avoid placing discs near corners unless the AI is in a position to secure the corner. This prevents the opponent from leveraging the AI's discs to gain control of the corner.
+
+5. **Mobility (`l`)**:
+   - **Definition**: Mobility refers to the number of legal moves available to a player at any given point.
+   - **Calculation**: While not explicitly calculated in the provided function, mobility can be evaluated as:
+     \[
+     l = \frac{100 \times (\text{myLegalMoves} - \text{oppLegalMoves})}{\text{myLegalMoves} + \text{oppLegalMoves}}
+     \]
+   - **Purpose**: Mobility is crucial as it determines the flexibility and potential for future moves. The AI favors moves that maximize its own mobility while limiting the opponent’s options.
+
+6. **Disc Square Table (`d`)**:
+   - **Definition**: This is a pre-defined table that assigns values to each square on the board based on its strategic importance.
+   - **Example**: The corners are given high positive values, while squares adjacent to the corners are given negative values to discourage placing discs there unless the corner is secured.
+   - **Purpose**: The disc square table guides the AI to occupy strategically valuable positions on the board, thereby strengthening its overall position.
+
+#### Dynamic Nature of the Heuristic
+
+The evaluation function is considered "dynamic" because it adjusts based on the state of the game and the specific configuration of the board. This dynamic adjustment allows the AI to weigh different strategic elements more heavily depending on the current phase of the game. For example:
+
+- **Early Game**: The AI might prioritize mobility and piece difference, ensuring it has many options for future moves while trying to gain a numerical advantage.
+- **Mid-Game**: The focus might shift to controlling key positions, such as corners, while minimizing frontier discs to reduce vulnerability.
+- **End-Game**: The AI might place more weight on corner occupancy and the disc square table to secure a strong final position and maximize its control over the board.
+
+By integrating these components, the Dynamic Heuristic Evaluation Function provides a sophisticated mechanism for the AI to assess the board and make decisions that balance immediate gains with long-term strategic considerations. This leads to more robust and competitive gameplay, especially against human opponents.
 
 ## Command Line Instructions
 
