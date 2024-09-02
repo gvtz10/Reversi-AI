@@ -275,8 +275,7 @@ public class Game {
                ai = new Ai(true, 2); // True = White, Difficulty 1 = Random
  
            } else if (boardDIM == 2) {
-        	   System.out.println("What depth would you like to search to? (Enter a postive intger)");
-        	   depth = scnr.nextInt();
+        	  
         	   p = new Player(false);
                ai = new Ai(true, 3);
  
@@ -363,7 +362,7 @@ public class Game {
         	   AILegalMoves = b.getLegalMovesBlack(b,ai);
            }
           if(!AILegalMoves.isEmpty()) {
-           b.makeMove(b,ai.choseMove(b,p,depth),ai);
+           b.makeMove(b,ai.choseMove(b,p),ai);
           }
        }
       
