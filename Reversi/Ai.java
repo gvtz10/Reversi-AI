@@ -2,12 +2,12 @@ import java.util.*;
  
 public class Ai extends Player {
 	boolean Color;
-	int difficulty; // WHite = true black = false
+	int difficulty; // WHite = true =  1 black = false = 2
 	final static int win = Integer.MAX_VALUE;
 	final static int loss = Integer.MIN_VALUE;
 	final static int draw = 0;
-   
-
+	final static long timeLimit = 10000;
+	
     int count;
  
 	public boolean getColor() {
@@ -29,7 +29,7 @@ public class Ai extends Player {
     	super(color);
 	}
  
-	Move choseMove(Board b, Player p, int depth) {
+	Move choseMove(Board b, Player p) {
     	Move chosenMove = new Move();
  
     	if (this.difficulty == 1) {
@@ -40,7 +40,7 @@ public class Ai extends Player {
         	chosenMove = MINIMAX(b, this, p);
     	}
     	if (this.difficulty == 3) {
-        	chosenMove = HMINIMAXABP(b, this, p, depth);
+        	chosenMove =  iterativeDeepening(b, this, p);
     	}
  
     	return chosenMove;
@@ -102,6 +102,9 @@ public class Ai extends Player {
     	}
     	return chosenMove;
 	}
+	
+	
+	
  
 	Move HMINIMAXABP(Board b, Ai ai, Player p, int depth) {
     	Move chosenMove = new Move();
@@ -122,7 +125,7 @@ public class Ai extends Player {
         	}
     	}
    	 
-    	HashMap<Integer, Move> moveToVal = new HashMap<Integer, Move>();
+    	HashMap<Double, Move> moveToVal = new HashMap<Double, Move>();
    	 
     	PriorityQueue<Move> moveQueue = new PriorityQueue<Move>();
     	for (Move m : legalMoves) {
@@ -134,17 +137,32 @@ public class Ai extends Player {
         	int beta = Integer.MAX_VALUE;
         	moveToVal.put(ABPminH(b, ai,depth, 0, p, alpha, beta), moveQueue.poll());
     	}
-    	int maxKey = Collections.max(moveToVal.keySet());
+    	double maxKey = Collections.max(moveToVal.keySet());
     	chosenMove = moveToVal.get(maxKey);
  
     	return chosenMove;
  
 	}
+	
+	Move iterativeDeepening(Board b, Ai ai, Player p) {
+        Move bestMove = null;
+        int depth = 1;
+        long starttime = System.currentTimeMillis();
+        
+        while(System.currentTimeMillis() - starttime < timeLimit) {
+                Move move = HMINIMAXABP(b, ai, p, depth);
+                bestMove = move;
+                depth++;
+                System.out.println(depth);
+
+        }
+        return bestMove;
+    }
  
-	int ABPminH(Board b, Ai ai, int maxDepth, int moveCount, Player p, int alpha, int beta) {
+	double ABPminH(Board b, Ai ai, int maxDepth, int moveCount, Player p, double alpha, double beta) {
     	
     	HashSet<Move> LegalMoves;
-    	HashSet<Integer> valSet = new HashSet<Integer>();
+    	HashSet<Double> valSet = new HashSet<Double>();
  
     	if (ai.Color == true) {
         	LegalMoves = b.getLegalMovesWhite(b, ai);
@@ -154,7 +172,7 @@ public class Ai extends Player {
  
     	if ((LegalMoves.isEmpty())||maxDepth <= moveCount) {
         
-        	return heuristicVal(b, ai);
+        	return dynamicHeuristicEvaluationFunction(b, ai);
        	 
         	}
  
@@ -162,7 +180,7 @@ public class Ai extends Player {
  
     	Board copy = new Board(b.size);
    	 
-    	valSet = new HashSet<Integer>();
+    	valSet = new HashSet<Double>();
     	PriorityQueue<Move> moveQueue = new PriorityQueue<Move>();
     	for (Move m : LegalMoves) {
         	m.setNumCaps(b.getNumCaps(b,m,ai));
@@ -195,10 +213,10 @@ public class Ai extends Player {
  
 	}
  
-	int ABPmaxH(Board b, Ai ai, int maxDepth, int moveCount, Player p, int alpha, int beta) {
+	double ABPmaxH(Board b, Ai ai, int maxDepth, int moveCount, Player p, double alpha, double beta) {
     	
     	HashSet<Move> LegalMoves;
-    	HashSet<Integer> valSet = new HashSet<Integer>();
+    	HashSet<Double> valSet = new HashSet<Double>();
     	moveCount++;
  
     	if (ai.Color == true) {
@@ -209,12 +227,12 @@ public class Ai extends Player {
  
     	if (LegalMoves.isEmpty()||maxDepth <= moveCount) {
         	//System.out.print("NO LEGAL MOVES");
-        	return heuristicVal(b, ai);
+        	return dynamicHeuristicEvaluationFunction(b, ai);
     	}
  
     	Board copy = new Board(b.size);
    	 
-    	valSet = new HashSet<Integer>();
+    	valSet = new HashSet<Double>();
     	PriorityQueue<Move> moveQueue = new PriorityQueue<Move>();
     	for (Move m : LegalMoves) {
         	m.setNumCaps(b.getNumCaps(b,m,ai));
@@ -248,48 +266,147 @@ public class Ai extends Player {
  
 	}
  
-	int heuristicVal(Board b, Ai ai) {
-    	int val;
-    	
-    	if (ai.Color) {
-    		
-    		if(b.isGameOver(b)) {
-        		
-        		int white = b.getWhiteScore(b);
-        		int black =  b.getBlackScore(b);
-        		
-        		if (white > black) {
-        			return win;
-        		} else if (white == black) {
-        			return 0;
-        		} else {
-        			return loss;
-        		}
-        	
-    		}
-        	val = b.getWhiteScore(b);
-        	
-    	} else {
-    		
-    		if(b.isGameOver(b)) {
-        		
-        		int white = b.getWhiteScore(b);
-        		int black =  b.getBlackScore(b);
-        		
-        		if (white < black) {
-        			return win;
-        		} else if (white == black) {
-        			return 0;
-        		} else {
-        			return loss;
-        		}
-        	}
-        	val = b.getBlackScore(b);
-    	}
-    	
-    	return val;
-    	
-	}
+	
+	public static double dynamicHeuristicEvaluationFunction(Board b, Ai ai) {
+        int myTiles = 0, oppTiles = 0;
+        int myFrontTiles = 0, oppFrontTiles = 0;
+        double p = 0, c = 0, l = 0, m = 0, f = 0, d = 0;
+
+        int[] xOffset = {-1, -1, 0, 1, 1, 1, 0, -1};
+        int[] yOffset = {0, 1, 1, 1, 0, -1, -1, -1};
+
+        int[][] valueMatrix = {
+            {20, -3, 11, 8, 8, 11, -3, 20},
+            {-3, -7, -4, 1, 1, -4, -7, -3},
+            {11, -4, 2, 2, 2, 2, -4, 11},
+            {8, 1, 2, -3, -3, 2, 1, 8},
+            {8, 1, 2, -3, -3, 2, 1, 8},
+            {11, -4, 2, 2, 2, 2, -4, 11},
+            {-3, -7, -4, 1, 1, -4, -7, -3},
+            {20, -3, 11, 8, 8, 11, -3, 20}
+        };
+        int[][] grid = b.board;
+        int myColor = 0;
+        int oppColor = 0; 
+        
+        if (ai.Color == true) {
+        	 myColor = 1;
+        	 oppColor = 2;
+        }
+        else {
+        	 myColor = 2;
+        	 oppColor = 1;
+        }
+       
+        // Piece difference, frontier disks, and disk squares
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                if (grid[i][j] == myColor) {
+                    d += valueMatrix[i][j];
+                    myTiles++;
+                } else if (grid[i][j] == oppColor) {
+                    d -= valueMatrix[i][j];
+                    oppTiles++;
+                }
+                if (grid[i][j] != '-') {
+                    for (int k = 0; k < 8; k++) {
+                        int x = i + xOffset[k];
+                        int y = j + yOffset[k];
+                        if (x >= 0 && x < 8 && y >= 0 && y < 8 && grid[x][y] == '-') {
+                            if (grid[i][j] == myColor) {
+                                myFrontTiles++;
+                            } else {
+                                oppFrontTiles++;
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (myTiles > oppTiles) {
+            p = (100.0 * myTiles) / (myTiles + oppTiles);
+        } else if (myTiles < oppTiles) {
+            p = -(100.0 * oppTiles) / (myTiles + oppTiles);
+        }
+
+        if (myFrontTiles > oppFrontTiles) {
+            f = -(100.0 * myFrontTiles) / (myFrontTiles + oppFrontTiles);
+        } else if (myFrontTiles < oppFrontTiles) {
+            f = (100.0 * oppFrontTiles) / (myFrontTiles + oppFrontTiles);
+        }
+
+        // Corner occupancy
+        myTiles = oppTiles = 0;
+        if (grid[0][0] == myColor) myTiles++;
+        else if (grid[0][0] == oppColor) oppTiles++;
+        if (grid[0][7] == myColor) myTiles++;
+        else if (grid[0][7] == oppColor) oppTiles++;
+        if (grid[7][0] == myColor) myTiles++;
+        else if (grid[7][0] == oppColor) oppTiles++;
+        if (grid[7][7] == myColor) myTiles++;
+        else if (grid[7][7] == oppColor) oppTiles++;
+        c = 25 * (myTiles - oppTiles);
+
+        // Corner closeness
+        myTiles = oppTiles = 0;
+        if (grid[0][0] == '-') {
+            if (grid[0][1] == myColor) myTiles++;
+            else if (grid[0][1] == oppColor) oppTiles++;
+            if (grid[1][1] == myColor) myTiles++;
+            else if (grid[1][1] == oppColor) oppTiles++;
+            if (grid[1][0] == myColor) myTiles++;
+            else if (grid[1][0] == oppColor) oppTiles++;
+        }
+        if (grid[0][7] == '-') {
+            if (grid[0][6] == myColor) myTiles++;
+            else if (grid[0][6] == oppColor) oppTiles++;
+            if (grid[1][6] == myColor) myTiles++;
+            else if (grid[1][6] == oppColor) oppTiles++;
+            if (grid[1][7] == myColor) myTiles++;
+            else if (grid[1][7] == oppColor) oppTiles++;
+        }
+        if (grid[7][0] == '-') {
+            if (grid[7][1] == myColor) myTiles++;
+            else if (grid[7][1] == oppColor) oppTiles++;
+            if (grid[6][1] == myColor) myTiles++;
+            else if (grid[6][1] == oppColor) oppTiles++;
+            if (grid[6][0] == myColor) myTiles++;
+            else if (grid[6][0] == oppColor) oppTiles++;
+        }
+        if (grid[7][7] == '-') {
+            if (grid[6][7] == myColor) myTiles++;
+            else if (grid[6][7] == oppColor) oppTiles++;
+            if (grid[6][6] == myColor) myTiles++;
+            else if (grid[6][6] == oppColor) oppTiles++;
+            if (grid[7][6] == myColor) myTiles++;
+            else if (grid[7][6] == oppColor) oppTiles++;
+        }
+        l = -12.5 * (myTiles - oppTiles);
+
+        // Mobility (assuming a method `numValidMoves`) 
+        if(ai.Color == true) {
+        	myTiles = b.getLegalMovesWhite(b, ai).size();
+		}
+        if(ai.Color == false) {
+        	oppTiles = b.getLegalMovesBlack(b, ai).size();
+			}
+        
+        
+        if (myTiles > oppTiles) {
+            m = (100.0 * myTiles) / (myTiles + oppTiles);
+        } else if (myTiles < oppTiles) {
+            m = -(100.0 * oppTiles) / (myTiles + oppTiles);
+        }
+
+        // Final weighted score
+        double score = (10 * p) + (801.724 * c) + (382.026 * l) + (78.922 * m) + (74.396 * f) + (10 * d);
+        return score;
+    }
+
+ 
+	
  
 	int min(Board b, Ai ai, Player p) {
     	if (b.isGameOver(b)) {
@@ -322,13 +439,7 @@ public class Ai extends Player {
  
     	if (LegalMoves.isEmpty()) {
         	return loss;
-        	/*
-         	* if (ai.Color == true) { return b.winChecker(b); } if (ai.Color == false) {
-         	* int winVal = b.winChecker(b);
-         	*
-         	* if (winVal == loss) { return win; } else if (winVal == win) { return loss; }
-         	* else { return 0; } }
-         	*/
+        	
     	}
  
     	Board copy = new Board(b.size);
@@ -391,13 +502,6 @@ public class Ai extends Player {
  
     	if (LegalMoves.isEmpty()) {
         	return loss;
-        	/*
-         	* if (ai.Color == true) { return b.winChecker(b); } if (ai.Color == false) {
-         	* int winVal = b.winChecker(b);
-         	*
-         	* if (winVal == loss) { return win; } else if (winVal == win) { return loss; }
-         	* else { return 0; } }
-         	*/
     	}
  
     	Board copy = new Board(b.size);
