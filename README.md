@@ -102,39 +102,22 @@ The Dynamic Heuristic Evaluation Function is a critical component in the AI's de
 
 1. **Piece Difference (`p`)**:
    - **Definition**: This factor evaluates the difference in the number of discs between the AI and the opponent.
-   - **Calculation**: The formula is:
-     \[
-     p = \frac{100 \times (\text{myTiles} - \text{oppTiles})}{\text{myTiles} + \text{oppTiles}}
-     \]
    - **Purpose**: The piece difference gives a basic indication of the player's dominance on the board. A higher piece difference in favor of the AI indicates a stronger position, while a lower difference suggests a weaker one.
 
 2. **Frontier Discs (`f`)**:
    - **Definition**: Frontier discs are those that are adjacent to empty spaces, making them vulnerable to capture in the opponent's next move.
-   - **Calculation**: The frontier disc value is calculated similarly to the piece difference but focuses on the discs' vulnerability:
-     \[
-     f = -\frac{100 \times (\text{myFrontTiles} - \text{oppFrontTiles})}{\text{myFrontTiles} + \text{oppFrontTiles}}
-     \]
    - **Purpose**: Minimizing frontier discs is essential as these discs are easier for the opponent to flip. The AI aims to reduce its own frontier discs while maximizing the opponent's, thus increasing its stability on the board.
 
 3. **Corner Occupancy (`c`)**:
    - **Definition**: Occupying the corners of the board is a critical strategy in Reversi, as corner discs are stable and cannot be flipped once placed.
-   - **Calculation**: The value assigned to corner occupancy is:
-     \[
-     c = 25 \times (\text{myCornerTiles} - \text{oppCornerTiles})
-     \]
    - **Purpose**: Controlling the corners provides a significant advantage, making it a high-priority goal. The AI heavily favors moves that either secure a corner or prevent the opponent from doing so.
 
 4. **Corner Closeness (`m`)**:
    - **Definition**: This factor penalizes positions where the AI has discs near an unoccupied corner that the opponent might later capture.
-   - **Calculation**: It evaluates the presence of AI or opponent discs adjacent to unoccupied corners, reducing the AI’s score if its discs are close to such corners without securing them.
    - **Purpose**: The goal is to avoid placing discs near corners unless the AI is in a position to secure the corner. This prevents the opponent from leveraging the AI's discs to gain control of the corner.
 
 5. **Mobility (`l`)**:
    - **Definition**: Mobility refers to the number of legal moves available to a player at any given point.
-   - **Calculation**: While not explicitly calculated in the provided function, mobility can be evaluated as:
-     \[
-     l = \frac{100 \times (\text{myLegalMoves} - \text{oppLegalMoves})}{\text{myLegalMoves} + \text{oppLegalMoves}}
-     \]
    - **Purpose**: Mobility is crucial as it determines the flexibility and potential for future moves. The AI favors moves that maximize its own mobility while limiting the opponent’s options.
 
 6. **Disc Square Table (`d`)**:
